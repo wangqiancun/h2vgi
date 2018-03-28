@@ -14,7 +14,7 @@ project = h2vgi.model.Project()
 # Instantiate a project with the necessary information to run a simulation.
 # Default values are assumed for the vehicle to model
 # and the charging infrastructures to simulate.
-project = h2vgi.itinerary.from_excel(project, '../data/NHTS/Connecticut.xlsx')
+project = h2vgi.itinerary.from_excel(project, '../data/NHTS/Tennessee_1.xlsx')
 
 for vehicle in project.vehicles:
     vehicle.result_function = h2vgi.result.save_vehicle_power_demand
