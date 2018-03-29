@@ -35,7 +35,7 @@ project = h2vgi.model.Project()
 # Instantiate a project with the necessary information to run a simulation.
 # Default values are assumed for the vehicle to model
 # and the charging infrastructures to simulate.
-project = h2vgi.itinerary.from_excel(project, '../data/NHTS/Tennessee.xlsx')
+project = h2vgi.itinerary.from_excel(project, '../data/NHTS/Tennessee_1.xlsx')
 nb_of_days =30  # <<<<<<<<<<<<<<<<<<<<
 project = h2vgi.itinerary.copy_append(project, nb_of_days_to_add=nb_of_days)
 
@@ -51,84 +51,75 @@ total_consumption = project.locations[0].result
 for location in project.locations[1:]:
     total_consumption += location.result
 
-total_consumption.to_csv('totalconsumption_Tennessee.csv')
+# Save total energy consumption
+#total_consumption.to_csv('totalconsumption_Tennessee.csv')
 
 # # read energy consumption data
 # total_consumption = pandas.read_excel('../data/totalconsumption.xlsx')
 #
-# vehicle_number=2094
-# real_number_FCEV = 800000
+vehicle_number = 100
+real_number_FCEV = 200000
 #
 # nb_of_days = 30
-# timestep = 60
-# # labels = range(0, nb_of_days+1)
-# # plt.figure(figsize=(12, 5), dpi=60)
-# # plt.plot(total_consumption.power_demand.cumsum() * timestep * real_number_FCEV/vehicle_number)
-# # plt.xticks(np.arange(0, 3600/timestep *nb_of_days * 24 + 1, 3600/timestep*24), labels, fontsize = 12)
-# # plt.yticks(fontsize = 12)
-# # #plt.title('Hydrogen consumption at the pump for ' + str(len(project.vehicles)) + ' vehicles')
-# # plt.title('Hydrogen consumption at the pump for ' +str(real_number_FCEV) + ' vehicles',fontsize=14)
-# # plt.ylabel('Total H2 consumption [kg]',fontsize=14)
-# # plt.xlabel('Time (Day)',fontsize=14)
-# # plt.show()
+timestep = 60
+labels = range(0, nb_of_days+1)
+plt.figure(figsize=(12, 5), dpi=60)
+plt.plot(total_consumption.power_demand.cumsum() * timestep * real_number_FCEV/vehicle_number)
+plt.xticks(np.arange(0, 3600/timestep *nb_of_days * 24 + 1, 3600/timestep*24), labels, fontsize = 12)
+plt.yticks(fontsize = 12)
+#plt.title('Hydrogen consumption at the pump for ' + str(len(project.vehicles)) + ' vehicles')
+plt.title('Hydrogen consumption at the pump for ' +str(real_number_FCEV) + ' vehicles',fontsize=14)
+plt.ylabel('Total H2 consumption [kg]',fontsize=14)
+plt.xlabel('Time (Day)',fontsize=14)
+plt.show()
 #
 #
 #
 #
 # # Select a time frame for the simulation
-# number_of_days = 1  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# off_set_day = 28 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# cap_factor = 1
-# times = range(0, number_of_days * 24 * 12)
-# #e_consumption = 60.2889626913    #kwh/kg
-# e_consumption = 67.3
+number_of_days = 1  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+off_set_day = 28 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+cap_factor = 0.5
+times = range(0, number_of_days * 24 * 12)
+#e_consumption = 60.2889626913    #kwh/kg
+e_consumption = 67.3
 #
 #
 #
-# # Select consumption
-# temp_start = total_consumption.index[0] + datetime.timedelta(days=off_set_day)
-# temp_end = temp_start + datetime.timedelta(days=number_of_days, minutes=-5)
-# temp = pandas.DataFrame(total_consumption.power_demand.ix[temp_start:temp_end].cumsum() * timestep / 2)
-# temp = temp.resample('5T',how='first')
-# temp['index'] = times
-# temp = temp.set_index(['index'])
+# Select consumption
+temp_start = total_consumption.index[0] + datetime.timedelta(days=off_set_day)
+temp_end = temp_start + datetime.timedelta(days=number_of_days, minutes=-5)
+temp = pandas.DataFrame(total_consumption.power_demand.ix[temp_start:temp_end].cumsum() * timestep / 2) # /2?
+temp = temp.resample('5T',how='first')
+temp['index'] = times
+temp = temp.set_index(['index'])
 #
+
 # #get the last value of temp as efinal
-# efinal = temp.iloc[-1,-1]*real_number_FCEV/vehicle_number
-# # print efinal
-# # print(efinal*e_consumption/24/cap_factor)
-# cumulative_profile = total_consumption.power_demand.ix[temp_start:temp_end].cumsum() * timestep *real_number_FCEV/vehicle_number/2
-# cumulative_profile = cumulative_profile.resample('5T')
-# cumulative_profile.to_csv('cumulativeprofile.csv')
-# # plt.plot(demand_profile)
-# # #plt.title('Hydrogen consumption at the pump for ' +str(real_number_FCEV) + ' vehicles',fontsize=14)
-# # plt.ylabel('H2 consumption rate',fontsize=14)
-# # plt.xlabel('Time',fontsize=14)
-# # plt.show()
-#
-# # plt.plot(cumulative_profile)
-# # #plt.title('Hydrogen consumption at the pump for ' +str(real_number_FCEV) + ' vehicles',fontsize=14)
-# # plt.ylabel('Cumulative H2 consumption [kg]',fontsize=14)
-# # plt.xlabel('Time',fontsize=14)
-# # plt.show()
-# #print(efinal)
-# # Prep constraints data
-# pmax = efinal/24/12/number_of_days/cap_factor # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# pmin = -efinal/24/12/number_of_days/cap_factor  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+efinal = temp.iloc[-1,-1]*real_number_FCEV/vehicle_number
+# print efinal
+# print(efinal*e_consumption/24/cap_factor)
+
+
+
+# Define Pmax based on efinal and capacity factor
+pmax = efinal/24/12/number_of_days/cap_factor # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+pmin = -efinal/24/12/number_of_days/cap_factor  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # #pmin = pmax * 0.1
 #
-# #print efinal/24/cap_factor*e_consumption
-# pmin = pandas.DataFrame(index=times, data={'pmin': [pmin] * len(times)})
-# pmax = pandas.DataFrame(index=times, data={'pmax': [pmax] * len(times)})  # [kg/h]
-#
-#
+# prepare pmin pmax vectors
+pmin = pandas.DataFrame(index=times, data={'pmin': [pmin] * len(times)})
+pmax = pandas.DataFrame(index=times, data={'pmax': [pmax] * len(times)})  # [kg/h]
+
+
 # # Create Vmin and Vmax
 # minimum_tank = 0  # [kg]  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# maximum_tank = efinal  # [kg]  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# maximum_tank = efinal/ number_of_days  # [kg]  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< 1 day storage
 # init_tank = 0.5 * maximum_tank # [kg]  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # vmin = temp * real_number_FCEV/vehicle_number + minimum_tank - init_tank      #<<<<<<<<<<<<<<
 # vmax= temp * real_number_FCEV/vehicle_number + maximum_tank - init_tank       #<<<<<<<<<<<<<<<
-#
+
+
 # plt.plot(vmin * e_consumption, label='energy_lower_bound')
 # plt.plot(vmax * e_consumption, label='energy_upper_bound')
 # plt.xticks(range(0,number_of_days*12*24+1,12),range(0,number_of_days * 24 + 1))
@@ -161,85 +152,88 @@ total_consumption.to_csv('totalconsumption_Tennessee.csv')
 # # temp_net_load = pandas.DataFrame(loaddata2030[day: day + datetime.timedelta(days=number_of_days,minutes=-5)]['netload'])
 # # temp_net_load = temp_net_load.interpolate(method='spline', order=2)
 #
-# #Load the net load data
-# finalResult = pandas.DataFrame()
-# filename = '../data/netload/2025.pickle'
-# with open(filename, 'rb') as fp:
-#     temp_net_load = pickle.load(fp)
-# day = datetime.datetime(2025, 7, 8)
-# temp_net_load = pandas.DataFrame(temp_net_load[day: day + datetime.timedelta(days=number_of_days,minutes=-5)]['netload'])
+#Load the net load data
+finalResult = pandas.DataFrame()
+filename = '../data/netload/2025.pickle'
+with open(filename, 'rb') as fp:
+    temp_net_load = pickle.load(fp)
+day = datetime.datetime(2025, 7, 8)
+temp_net_load = pandas.DataFrame(temp_net_load[day: day + datetime.timedelta(days=number_of_days,minutes=-5)]['netload'])
 #
-# temp_index = pandas.DataFrame(range(0, len(temp_net_load)), columns=['index'])
-# net_load = temp_net_load.copy()
-# net_load = net_load.set_index(temp_index['index'])
-# #net_load = net_load.resample('5T', how='first')
-# # scale_up = e_consumption * 200000/len(project.vehicles)
-# net_load = net_load *1000 / e_consumption /12  #in kg
-# final_net_load = net_load * e_consumption * 12
-# #print net_load
-# # Launch optimization
-# with SolverFactory('gurobi') as opt:
-#     model = ConcreteModel()
-#
-#     # Set
-#     model.t = Set(initialize=times, doc='Time', ordered=True)
-#     last_t = model.t.last()
-#
-#     # Parameters
-#                 # Net load
-#     model.d = Param(model.t, initialize = net_load.to_dict()['netload'], doc='Net load')
-#     model.p_max = Param(model.t, initialize=pmax.to_dict()['pmax'], doc='P max')
-#     model.p_min = Param(model.t, initialize=pmin.to_dict()['pmin'], doc='P min')
-#     model.v_min = Param(model.t, initialize=vmin.to_dict()['power_demand'], doc='E min')
-#     model.v_max = Param(model.t, initialize=vmax.to_dict()['power_demand'], doc='E max')
-#
-#     # Variables
-#     model.p = Var(model.t, domain=Reals, doc='electricity to hydrogen')
-#
-#     # Rules
-#     def maximum_power_rule(model, t):
-#         return model.p[t] <= model.p_max[t]
-#     model.power_max_rule = Constraint(model.t, rule=maximum_power_rule, doc='P max rule')
-#
-#     def minimum_power_rule(model, t):
-#         return model.p[t] >= model.p_min[t]
-#     model.power_min_rule = Constraint(model.t, rule=minimum_power_rule, doc='P min rule')
-#
-#     # def minimum_energy_rule(model, t):
-#     #     return sum(model.p[i] for i in range(0, t + 1)) >= model.v_min[t]
-#     # model.minimum_energy_rule = Constraint(model.t, rule=minimum_energy_rule, doc='E min rule')
-#     #
-#     # def maximum_energy_rule(model, t):
-#     #     return sum(model.p[i] for i in range(0, t + 1)) <= model.v_max[t]
-#     # model.maximum_energy_rule = Constraint(model.t, rule=maximum_energy_rule, doc='E max rule')
-#     #
-#     # def final_energy_balance(model):
-#     #     return sum(model.p[i] for i in model.t)  >=  efinal
-#     # model.final_energy_rule = Constraint()
-#
-#     model.final = Constraint(expr=sum(model.p[i] for i in model.t) == efinal)
-#
-#
-#     def objective_rule(model):
-#         return sum([(model.d[t] + model.p[t])**2 for t in model.t])
-#     model.objective = Objective(rule=objective_rule, sense=minimize, doc='Define objective function')
-#
-#     # def objective_rule(model):
-#     #     return sum([(model.d[t + 1] - model.d[t] + model.p[t+1]-model.p[t])**2 for t in model.t if t != last_t])
-#     # model.objective = Objective(rule=objective_rule, sense=minimize, doc='Define objective function')
-#
-#     results = opt.solve(model)
-#
-#     #print value(model.objective)
-#     model.load(results) # Loading solution into results object
-#
-#     if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
-#         print 'Got the optimal solution!'
-#     elif (results.solver.termination_condition == TerminationCondition.infeasible):
-#                 print 'No infeasible solution!'
-#     else:
-#                 # Something else is wrong
-#         print ('Solver Status:', results.solver.status)
+temp_index = pandas.DataFrame(range(0, len(temp_net_load)), columns=['index'])
+net_load = temp_net_load.copy()
+net_load = net_load.set_index(temp_index['index'])
+#net_load = net_load.resample('5T', how='first')
+# scale_up = e_consumption * 200000/len(project.vehicles)
+net_load = net_load *1000 / e_consumption /12  #in kg
+
+final_net_load = net_load * e_consumption * 12
+#print net_load
+
+
+# Launch optimization
+with SolverFactory('gurobi') as opt:
+    model = ConcreteModel()
+
+    # Set
+    model.t = Set(initialize=times, doc='Time', ordered=True)
+    last_t = model.t.last()
+
+    # Parameters
+    # Net load
+    model.d = Param(model.t, initialize = net_load.to_dict()['netload'], doc='Net load')
+    model.p_max = Param(model.t, initialize=pmax.to_dict()['pmax'], doc='P max')
+    model.p_min = Param(model.t, initialize=pmin.to_dict()['pmin'], doc='P min')
+    # model.v_min = Param(model.t, initialize=vmin.to_dict()['power_demand'], doc='E min')
+    # model.v_max = Param(model.t, initialize=vmax.to_dict()['power_demand'], doc='E max')
+
+    # Variables
+    model.p = Var(model.t, domain=Reals, doc='electricity to hydrogen')
+
+    # Rules
+    def maximum_power_rule(model, t):
+        return model.p[t] <= model.p_max[t]
+    model.power_max_rule = Constraint(model.t, rule=maximum_power_rule, doc='P max rule')
+
+    def minimum_power_rule(model, t):
+        return model.p[t] >= model.p_min[t]
+    model.power_min_rule = Constraint(model.t, rule=minimum_power_rule, doc='P min rule')
+
+    # def minimum_energy_rule(model, t):
+    #     return sum(model.p[i] for i in range(0, t + 1)) >= model.v_min[t]
+    # model.minimum_energy_rule = Constraint(model.t, rule=minimum_energy_rule, doc='E min rule')
+    #
+    # def maximum_energy_rule(model, t):
+    #     return sum(model.p[i] for i in range(0, t + 1)) <= model.v_max[t]
+    # model.maximum_energy_rule = Constraint(model.t, rule=maximum_energy_rule, doc='E max rule')
+    #
+    # def final_energy_balance(model):
+    #     return sum(model.p[i] for i in model.t)  >=  efinal
+    # model.final_energy_rule = Constraint()
+
+    model.final = Constraint(expr=sum(model.p[i] for i in model.t) == efinal)
+
+
+    def objective_rule(model):
+        return sum([(model.d[t] + model.p[t])**2 for t in model.t])
+    model.objective = Objective(rule=objective_rule, sense=minimize, doc='Define objective function')
+
+    # def objective_rule(model):
+    #     return sum([(model.d[t + 1] - model.d[t] + model.p[t+1]-model.p[t])**2 for t in model.t if t != last_t])
+    # model.objective = Objective(rule=objective_rule, sense=minimize, doc='Define objective function')
+
+    results = opt.solve(model)
+
+    #print value(model.objective)
+    model.load(results) # Loading solution into results object
+
+    # if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
+    #     print 'Got the optimal solution!'
+    # elif (results.solver.termination_condition == TerminationCondition.infeasible):
+    #             print 'No infeasible solution!'
+    # else:
+    #             # Something else is wrong
+    #     print ('Solver Status:', results.solver.status)
 #
 #
 #
